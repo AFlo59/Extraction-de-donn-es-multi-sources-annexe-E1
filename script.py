@@ -1,26 +1,35 @@
 import logging
-from extraction_sql import extract_sql
-from extraction_parquet import extract_parquet
-from extraction_csv import extract_csv
+import traceback
+from script_folder.extract_sql import extract_sql
+from script_folder.extract_parquet import extract_parquet
+from script_folder.extract_csv import extract_csv
+from script_folder.utils import setup_logger
 
 def main():
-    # Initialisation des logs
-    logging.basicConfig(filename='extraction.log', level=logging.INFO)
-    logging.info("Démarrage de l'extraction multi-sources.")
+    # Initialisation du logger
+    setup_logger()
+
+    logging.info("Démarrage de l'extraction multisource.")
 
     try:
-        # Étape 1 : Extraction SQL
         extract_sql()
-
-        # Étape 2 : Extraction Parquet
-        extract_parquet()
-
-        # Étape 3 : Extraction CSV
-        extract_csv()
-
-        logging.info("Extraction terminée avec succès.")
     except Exception as e:
-        logging.error(f"Erreur lors de l'extraction : {e}")
+        logging.error(f"Erreur lors de l'extraction SQL : {e}")
+        traceback.print_exc()
+
+    try:
+        extract_parquet()
+    except Exception as e:
+        logging.error(f"Erreur lors de l'extraction Parquet : {e}")
+        traceback.print_exc()
+
+    try:
+        extract_csv()
+    except Exception as e:
+        logging.error(f"Erreur lors de l'extraction CSV : {e}")
+        traceback.print_exc()
+
+    logging.info("Processus d'extraction terminé.")
 
 if __name__ == "__main__":
     main()

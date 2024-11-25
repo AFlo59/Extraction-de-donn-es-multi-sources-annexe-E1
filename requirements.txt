@@ -1,0 +1,28 @@
+# requirements.txt
+# Connexion à SQL Server
+pyodbc
+
+# Manipulation des fichiers Parquet
+pyarrow
+
+# Manipulation avancée des DataFrames
+pandas
+polars
+
+# Gestion des fichiers CSV et Parquet avec DuckDB
+duckdb
+
+# Journalisation et suivi des logs
+loguru
+
+# Gestion des tâches planifiées (si nécessaire en Python)
+schedule
+
+# Gestion des accès Azure Data Lake
+azure-storage-blob
+
+# Gestion des dépendances environnementales
+python-dotenv
+
+# Version compatible de numpy
+numpy
