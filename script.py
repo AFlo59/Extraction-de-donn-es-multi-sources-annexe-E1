@@ -17,17 +17,17 @@ def main():
         logging.error(f"Erreur lors de l'extraction SQL : {e}")
         traceback.print_exc()
 
-    try:
-        extract_parquet()
-    except Exception as e:
-        logging.error(f"Erreur lors de l'extraction Parquet : {e}")
-        traceback.print_exc()
+    # try:
+    #     extract_parquet()
+    # except Exception as e:
+    #     logging.error(f"Erreur lors de l'extraction Parquet : {e}")
+    #     traceback.print_exc()
 
-    try:
-        extract_csv()
-    except Exception as e:
-        logging.error(f"Erreur lors de l'extraction CSV : {e}")
-        traceback.print_exc()
+    # try:
+    #     extract_csv()
+    # except Exception as e:
+    #     logging.error(f"Erreur lors de l'extraction CSV : {e}")
+    #     traceback.print_exc()
 
     logging.info("Processus d'extraction terminé.")
 

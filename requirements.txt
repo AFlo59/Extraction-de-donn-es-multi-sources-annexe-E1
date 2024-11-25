@@ -26,3 +26,6 @@ python-dotenv
 
 # Version compatible de numpy
 numpy
+
+# requirements.txt
+SQLAlchemy
