@@ -17,27 +17,44 @@
    venv\Scripts\activate     # Windows
 
 project/
-│
 ├── script.py                 # Script principal orchestrant les extractions
-├── .env                      # Variables d'environnement (confidentiales)
+├── install.sh                # Script pour l'installation automatique des dépendances
+├── schedule.sh               # Script pour planifier et lancer les extractions
+├── .gitlab-ci.yml            # Configuration CI/CD pour valider les scripts sur la branche develop
+├── .env                      # Variables d'environnement (confidentielles)
 ├── .gitignore                # Ignore venv et fichiers sensibles
 ├── README.md                 # Documentation du projet
 ├── requirements.txt          # Dépendances Python
 ├── venv/                     # Environnement virtuel
-├── script_folder/            # Scripts modulaires pour les extractions
-│   ├── extract_sql.py        # Extraction SQL
+├── scripts/                  # Scripts modulaires pour les extractions
+│   ├── generate_sas_token.py # Script pour générer des tokens SAS
+│   ├── extract_sql.py        # Extraction des tables SQL convertie en csv
 │   ├── extract_parquet.py    # Extraction Parquet
-│   ├── extract_csv.py        # Extraction CSV
-│   ├── setup_folders.py        
+│   ├── extract_zip.py        # Extraction des fichiers ZIP
+│   ├── extract_nlp_data.py   # Extraction des données NLP
+│   ├── setup_folders.py      # Création des dossiers nécessaires
 │   └── utils.py              # Fonctions utilitaires communes
-├── csv_folder/               # Dossier de destination des fichiers CSV extraits
+├── raw_data/                 # Dossier pour les données brutes
 │   ├── sql_data/
-|   |   └── xschema/
-|   |       └── xtable.csv
-│   ├── parquet_metadata/
-|   |   ├── metadata_xx.csv
-|   |   └── images/xxx.png 
-│   └── csv_data/
-|       └── xx.csv 
+│   │   └── schema/
+│   │       └── table.csv
+│   ├── parquet_data/
+│   │   ├── fichier.parquet
+│   │   └── images/
+│   │       └── image.png
+│   ├── zip_data/
+│   │   └── fichier.csv
+│   └── nlp_data/
+│       └── sous_dossier/
+│           └── fichier.csv
+├── csv_data/                 # Dossier pour les données transformées
+│   ├── transformed_sql/
+│   ├── transformed_parquet/
+│   ├── transformed_zip/
+│   └── transformed_nlp/
 └── logs/                     # Dossier pour les fichiers de logs
     └── extraction.log
+
+
+pour lire les log du cron
+grep CRON /var/log/syslog
