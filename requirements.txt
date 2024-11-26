@@ -1,5 +1,3 @@
-# requirements.txt
-
 # Connexion à SQL Server
 pyodbc
 SQLAlchemy
@@ -10,18 +8,18 @@ polars
 
 # Gestion des fichiers CSV et Parquet avec fsspec et adlfs
 azure-storage-blob
+azure-identity
 fsspec
 adlfs
 
+# Formats de données
 pyarrow
-pandas
-
 
 # Journalisation et suivi des logs
 loguru
 
-# Gestion des dépendances environnementales
+# Gestion des variables d'environnement
 python-dotenv
 
-# Version compatible de numpy
+# Autres dépendances
 numpy
