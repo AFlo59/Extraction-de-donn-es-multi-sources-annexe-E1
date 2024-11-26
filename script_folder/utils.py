@@ -1,3 +1,4 @@
+# script_folder/utils.py
 import logging
 from dotenv import load_dotenv
 import os
@@ -7,10 +8,11 @@ load_dotenv()
 
 def setup_logger(log_file="logs/extraction.log"):
     """Configure le logger."""
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
     logging.basicConfig(
         filename=log_file,
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s"
+        level=logging.INFO,  # Vous pouvez ajuster le niveau de log
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
 def get_env_variable(key):

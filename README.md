@@ -28,10 +28,16 @@ project/
 │   ├── extract_sql.py        # Extraction SQL
 │   ├── extract_parquet.py    # Extraction Parquet
 │   ├── extract_csv.py        # Extraction CSV
+│   ├── setup_folders.py        
 │   └── utils.py              # Fonctions utilitaires communes
 ├── csv_folder/               # Dossier de destination des fichiers CSV extraits
-│   ├── sql_data.csv
-│   ├── parquet_metadata.csv
-│   └── csv_data.csv
+│   ├── sql_data/
+|   |   └── xschema/
+|   |       └── xtable.csv
+│   ├── parquet_metadata/
+|   |   ├── metadata_xx.csv
+|   |   └── images/xxx.png 
+│   └── csv_data/
+|       └── xx.csv 
 └── logs/                     # Dossier pour les fichiers de logs
     └── extraction.log

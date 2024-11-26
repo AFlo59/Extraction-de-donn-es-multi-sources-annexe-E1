@@ -36,7 +36,7 @@ def get_all_tables(engine):
     """Récupère les schémas et tables spécifiés de la base de données."""
     try:
         # Liste des schémas à inclure
-        included_schemas = ("Production", "Person", "Purchasing", "Sales", "HumanResources")
+        included_schemas = ("Production", "Person", "Purchasing", "Sales", "HumanResources", "dbo")
 
         # Convertir la liste en chaîne pour la requête SQL
         schemas_list = "', '".join(included_schemas)
@@ -54,7 +54,7 @@ def get_all_tables(engine):
         raise
 
 def extract_table_data(engine, schema, table, output_file):
-    """Extrait les données d'une table en excluant les types non supportés."""
+    """Extrait les données d'une table en convertissant les types non supportés."""
     try:
         # Obtenir les colonnes et leurs types à partir de INFORMATION_SCHEMA.COLUMNS
         columns_query = f"""
@@ -68,22 +68,48 @@ def extract_table_data(engine, schema, table, output_file):
             logging.warning(f"Aucune colonne trouvée dans {schema}.{table}.")
             return
 
+        # Définir les types de données supportés
+        supported_data_types = [
+            'int', 'bigint', 'smallint', 'tinyint', 'bit',
+            'decimal', 'numeric', 'money', 'smallmoney',
+            'float', 'real',
+            'date', 'time', 'datetime', 'datetime2', 'smalldatetime',
+            'char', 'varchar', 'nchar', 'nvarchar', 'text', 'ntext',
+            'binary', 'varbinary'
+        ]
+
         # Construire la liste des colonnes pour la requête SQL
         select_clauses = []
-        unsupported_types = ['datetimeoffset', 'hierarchyid', 'xml', 'geometry', 'geography', 'image', 'sql_variant']
         for _, row in columns_df.iterrows():
             column_name = row['COLUMN_NAME']
             data_type = row['DATA_TYPE'].lower()
-            if data_type == 'datetimeoffset':
-                # Convertir la colonne datetimeoffset en VARCHAR
+
+            if data_type in supported_data_types:
+                select_clauses.append(f"[{column_name}]")
+            elif data_type == 'datetimeoffset':
+                # Convertir datetimeoffset en VARCHAR
                 select_clauses.append(f"CONVERT(VARCHAR(50), [{column_name}], 121) AS [{column_name}]")
                 logging.warning(f"Colonne datetimeoffset convertie ({schema}.{table}): {column_name}")
-            elif data_type in unsupported_types:
-                # Exclure les colonnes de types non supportés
-                logging.warning(f"Colonne exclue ({schema}.{table}): {column_name} (type: {data_type})")
-                continue
+            elif data_type == 'uniqueidentifier':
+                # Convertir uniqueidentifier en VARCHAR(36)
+                select_clauses.append(f"CONVERT(VARCHAR(36), [{column_name}]) AS [{column_name}]")
+                logging.warning(f"Colonne uniqueidentifier convertie ({schema}.{table}): {column_name}")
+            elif data_type == 'xml':
+                # Convertir xml en NVARCHAR(MAX)
+                select_clauses.append(f"CONVERT(NVARCHAR(MAX), [{column_name}]) AS [{column_name}]")
+                logging.warning(f"Colonne xml convertie ({schema}.{table}): {column_name}")
+            elif data_type == 'hierarchyid':
+                # Convertir hierarchyid en VARCHAR
+                select_clauses.append(f"CONVERT(VARCHAR(1000), [{column_name}].ToString()) AS [{column_name}]")
+                logging.warning(f"Colonne hierarchyid convertie ({schema}.{table}): {column_name}")
+            elif data_type == 'geography':
+                # Convertir geography en WKT (Well-Known Text)
+                select_clauses.append(f"CONVERT(VARCHAR(MAX), [{column_name}].STAsText()) AS [{column_name}]")
+                logging.warning(f"Colonne geography convertie ({schema}.{table}): {column_name}")
             else:
-                select_clauses.append(f"[{column_name}]")
+                # Exclure les colonnes de types non supportés
+                logging.warning(f"Colonne exclue ({schema}.{table}): {column_name} (type non supporté: {data_type})")
+                continue
 
         if not select_clauses:
             logging.warning(f"Aucune colonne supportée trouvée dans {schema}.{table}. Table ignorée.")
@@ -94,7 +120,9 @@ def extract_table_data(engine, schema, table, output_file):
 
         # Exécuter la requête et enregistrer les données
         df = pd.read_sql_query(text(query), engine)
-        df.to_csv(output_file, index=False)
+
+        # Enregistrer les données en écrasant le fichier existant
+        df.to_csv(output_file, index=False, mode='w')
         logging.info(f"Données extraites de {schema}.{table} vers {output_file}")
     except Exception as e:
         logging.error(f"Erreur lors de l'extraction de {schema}.{table} : {e}")
@@ -139,6 +167,3 @@ def extract_sql():
     except Exception as e:
         logging.error(f"Erreur lors de l'extraction SQL : {e}")
         print(f"Erreur lors de l'extraction SQL : {e}")
-
-if __name__ == "__main__":
-    extract_sql()
