@@ -18,10 +18,10 @@ def main():
     # Création des dossiers nécessaires
     create_directories()
 
-    # Initialisation du logger
-    setup_logger()
+    # Initialisation du logger pour le pipeline
+    pipeline_logger = setup_logger('pipeline', 'logs/pipeline.log')
 
-    logging.info("Démarrage de l'extraction de données multisource.")
+    pipeline_logger.info("Démarrage de l'extraction de données multisource.")
 
     # Variables pour suivre les mises à jour
     sql_updated = False
@@ -32,47 +32,47 @@ def main():
     try:
         sql_updated = extract_sql()
     except Exception as e:
-        logging.error(f"Erreur lors de l'extraction SQL : {e}")
+        pipeline_logger.error(f"Erreur lors de l'extraction SQL : {e}")
         traceback.print_exc()
 
     try:
         parquet_updated = extract_parquet()
     except Exception as e:
-        logging.error(f"Erreur lors de l'extraction Parquet : {e}")
+        pipeline_logger.error(f"Erreur lors de l'extraction Parquet : {e}")
         traceback.print_exc()
 
     try:
         zip_updated = extract_zip()
     except Exception as e:
-        logging.error(f"Erreur lors de l'extraction du fichier ZIP : {e}")
+        pipeline_logger.error(f"Erreur lors de l'extraction du fichier ZIP : {e}")
         traceback.print_exc()
 
     try:
         nlp_updated = extract_nlp_data()
     except Exception as e:
-        logging.error(f"Erreur lors de l'extraction des données NLP : {e}")
+        pipeline_logger.error(f"Erreur lors de l'extraction des données NLP : {e}")
         traceback.print_exc()
 
-    logging.info("Processus d'extraction terminé.")
+    pipeline_logger.info("Processus d'extraction terminé.")
 
     # Lancer les scripts de duplication/transformation si les données ont été mises à jour
     if sql_updated:
-        logging.info("Les données SQL ont été mises à jour. Lancement du script de duplication SQL.")
+        pipeline_logger.info("Les données SQL ont été mises à jour. Lancement du script de duplication SQL.")
         duplicate_sql_data(["Person", "Production", "Purchasing", "Sales"])
 
     if parquet_updated:
-        logging.info("Les données Parquet ont été mises à jour. Lancement du script de transformation Parquet.")
+        pipeline_logger.info("Les données Parquet ont été mises à jour. Lancement du script de transformation Parquet.")
         transform_parquet_to_csv()
 
     if zip_updated:
-        logging.info("Les données ZIP ont été mises à jour. Lancement du script de transformation ZIP.")
+        pipeline_logger.info("Les données ZIP ont été mises à jour. Lancement du script de transformation ZIP.")
         extract_and_convert_zip()
 
     if nlp_updated:
-        logging.info("Les données NLP ont été mises à jour. Lancement du script de duplication NLP.")
+        pipeline_logger.info("Les données NLP ont été mises à jour. Lancement du script de duplication NLP.")
         duplicate_nlp_data()
 
-    logging.info("Pipeline complet terminé.")
+    pipeline_logger.info("Pipeline complet terminé.")
 
 if __name__ == "__main__":
     main()

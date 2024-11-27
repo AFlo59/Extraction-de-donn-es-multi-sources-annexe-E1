@@ -1,9 +1,17 @@
+# scripts/transform_parquet_data.py
 import os
 import logging
 import pyarrow.parquet as pq
-from scripts.utils import setup_logger
 
 def transform_parquet_to_csv():
+    """
+    Transforme les fichiers Parquet en CSV et extrait les images.
+
+    :return: Booléen indiquant si des fichiers ont été transformés
+    """
+    transformed = False
+    pipeline_logger = logging.getLogger('pipeline')
+
     raw_dir = os.path.join("raw_data", "parquet_data")
     csv_dir = os.path.join("csv_data", "parquet_data")
     images_dir = os.path.join(csv_dir, "images")
@@ -38,12 +46,9 @@ def transform_parquet_to_csv():
                 csv_file_name = f"{os.path.splitext(file_name)[0]}.csv"
                 output_csv_path = os.path.join(csv_dir, csv_file_name)
                 df.to_csv(output_csv_path, index=False)
-                logging.info(f"Fichier Parquet transformé : {file_name} -> {output_csv_path}")
+                pipeline_logger.info(f"Fichier Parquet transformé : {file_name} -> {output_csv_path}")
+                transformed = True
             except Exception as e:
-                logging.error(f"Erreur lors du traitement de {file_name}: {e}")
+                pipeline_logger.error(f"Erreur lors du traitement de {file_name}: {e}")
 
-if __name__ == "__main__":
-    setup_logger(log_file="logs/pipeline.log")
-    logging.info("Démarrage du traitement Parquet Data...")
-    transform_parquet_to_csv()
-    logging.info("Traitement Parquet Data terminé.")
+    return transformed

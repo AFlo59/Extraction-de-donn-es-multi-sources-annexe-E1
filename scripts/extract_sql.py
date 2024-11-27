@@ -4,7 +4,10 @@ import os
 import pandas as pd
 from sqlalchemy import create_engine, text
 from urllib.parse import quote_plus
-from scripts.utils import get_env_variable
+from scripts.utils import setup_logger, get_env_variable
+
+# Initialiser le logger pour l'extraction SQL
+extraction_logger = setup_logger('extraction_sql', 'logs/extraction.log')
 
 def connect_to_sql_server():
     """Établit la connexion au serveur SQL via SQLAlchemy."""
@@ -26,17 +29,16 @@ def connect_to_sql_server():
         )
 
         engine = create_engine(connection_string, fast_executemany=True)
-        logging.info("Connexion réussie au serveur SQL via SQLAlchemy.")
+        extraction_logger.info("Connexion réussie au serveur SQL via SQLAlchemy.")
         return engine
     except Exception as e:
-        logging.error(f"Erreur de connexion au serveur SQL : {e}")
+        extraction_logger.error(f"Erreur de connexion au serveur SQL : {e}")
         raise
 
 def get_all_tables(engine):
     """Récupère les schémas et tables spécifiés de la base de données."""
     try:
-
-        query = f"""
+        query = """
         SELECT TABLE_SCHEMA, TABLE_NAME
         FROM INFORMATION_SCHEMA.TABLES
         WHERE TABLE_TYPE = 'BASE TABLE'
@@ -44,7 +46,7 @@ def get_all_tables(engine):
         df_tables = pd.read_sql_query(query, engine)
         return df_tables
     except Exception as e:
-        logging.error(f"Erreur lors de la récupération des tables : {e}")
+        extraction_logger.error(f"Erreur lors de la récupération des tables : {e}")
         raise
 
 def extract_table_data(engine, schema, table, output_file):
@@ -59,7 +61,7 @@ def extract_table_data(engine, schema, table, output_file):
         columns_df = pd.read_sql_query(columns_query, engine)
 
         if columns_df.empty:
-            logging.warning(f"Aucune colonne trouvée dans {schema}.{table}.")
+            extraction_logger.warning(f"Aucune colonne trouvée dans {schema}.{table}.")
             return
 
         # Définir les types de données supportés
@@ -83,30 +85,30 @@ def extract_table_data(engine, schema, table, output_file):
             elif data_type == 'datetimeoffset':
                 # Convertir datetimeoffset en VARCHAR
                 select_clauses.append(f"CONVERT(VARCHAR(50), [{column_name}], 121) AS [{column_name}]")
-                logging.warning(f"Colonne datetimeoffset convertie ({schema}.{table}): {column_name}")
+                extraction_logger.warning(f"Colonne datetimeoffset convertie ({schema}.{table}): {column_name}")
             elif data_type == 'uniqueidentifier':
                 # Convertir uniqueidentifier en VARCHAR(36)
                 select_clauses.append(f"CONVERT(VARCHAR(36), [{column_name}]) AS [{column_name}]")
-                logging.warning(f"Colonne uniqueidentifier convertie ({schema}.{table}): {column_name}")
+                extraction_logger.warning(f"Colonne uniqueidentifier convertie ({schema}.{table}): {column_name}")
             elif data_type == 'xml':
                 # Convertir xml en NVARCHAR(MAX)
                 select_clauses.append(f"CONVERT(NVARCHAR(MAX), [{column_name}]) AS [{column_name}]")
-                logging.warning(f"Colonne xml convertie ({schema}.{table}): {column_name}")
+                extraction_logger.warning(f"Colonne xml convertie ({schema}.{table}): {column_name}")
             elif data_type == 'hierarchyid':
                 # Convertir hierarchyid en VARCHAR
                 select_clauses.append(f"CONVERT(VARCHAR(1000), [{column_name}].ToString()) AS [{column_name}]")
-                logging.warning(f"Colonne hierarchyid convertie ({schema}.{table}): {column_name}")
+                extraction_logger.warning(f"Colonne hierarchyid convertie ({schema}.{table}): {column_name}")
             elif data_type == 'geography':
                 # Convertir geography en WKT (Well-Known Text)
                 select_clauses.append(f"CONVERT(VARCHAR(MAX), [{column_name}].STAsText()) AS [{column_name}]")
-                logging.warning(f"Colonne geography convertie ({schema}.{table}): {column_name}")
+                extraction_logger.warning(f"Colonne geography convertie ({schema}.{table}): {column_name}")
             else:
                 # Exclure les colonnes de types non supportés
-                logging.warning(f"Colonne exclue ({schema}.{table}): {column_name} (type non supporté: {data_type})")
+                extraction_logger.warning(f"Colonne exclue ({schema}.{table}): {column_name} (type non supporté: {data_type})")
                 continue
 
         if not select_clauses:
-            logging.warning(f"Aucune colonne supportée trouvée dans {schema}.{table}. Table ignorée.")
+            extraction_logger.warning(f"Aucune colonne supportée trouvée dans {schema}.{table}. Table ignorée.")
             return
 
         columns_str = ', '.join(select_clauses)
@@ -117,9 +119,9 @@ def extract_table_data(engine, schema, table, output_file):
 
         # Enregistrer les données en écrasant le fichier existant
         df.to_csv(output_file, index=False, mode='w')
-        logging.info(f"Données extraites de {schema}.{table} vers {output_file}")
+        extraction_logger.info(f"Données extraites de {schema}.{table} vers {output_file}")
     except Exception as e:
-        logging.error(f"Erreur lors de l'extraction de {schema}.{table} : {e}")
+        extraction_logger.error(f"Erreur lors de l'extraction de {schema}.{table} : {e}")
         # Ne pas lever l'exception pour permettre au script de continuer avec les autres tables
 
 def extract_sql():
@@ -131,12 +133,12 @@ def extract_sql():
         required_vars = ["SQL_SERVER", "SQL_DB", "SQL_ID", "SQL_PW", "DRIVER", "ENCRYPT", "TrustServerCertificate"]
         for var in required_vars:
             if not get_env_variable(var):
-                logging.error(f"La variable d'environnement {var} est manquante.")
+                extraction_logger.error(f"La variable d'environnement {var} est manquante.")
                 raise ValueError(f"La variable d'environnement {var} est manquante.")
 
         engine = connect_to_sql_server()
         df_tables = get_all_tables(engine)
-        logging.info(f"{len(df_tables)} tables trouvées pour l'extraction.")
+        extraction_logger.info(f"{len(df_tables)} tables trouvées pour l'extraction.")
 
         # Dossier de base pour les fichiers CSV
         base_output_dir = "raw_data/sql_data"
@@ -149,26 +151,27 @@ def extract_sql():
             schema_dir = os.path.join(base_output_dir, schema)
             if not os.path.exists(schema_dir):
                 os.makedirs(schema_dir)
-                logging.info(f"Dossier créé : {schema_dir}")
+                extraction_logger.info(f"Dossier créé : {schema_dir}")
 
             # Définir le chemin du fichier de sortie
             output_file = os.path.join(schema_dir, f"{table}.csv")
 
             # Vérifier si le fichier existe déjà
             if os.path.exists(output_file):
-                logging.info(f"Le fichier {output_file} existe déjà. Vérification des mises à jour...")
-
-                # Ici, vous pouvez implémenter une logique pour comparer les données, par exemple en comparant les horodatages ou les hash des fichiers.
-                # Pour simplifier, nous allons supposer que nous extrayons toujours les données SQL.
+                extraction_logger.info(f"Le fichier {output_file} existe déjà. Vérification des mises à jour...")
+                # Implémenter une logique de comparaison ici (par exemple, horodatage ou hash)
+                # Pour simplifier, supposons que nous extrayons toujours les données
+                # Vous pouvez ajouter une logique pour vérifier les modifications
+                pass
 
             # Extraire les données de la table
             extract_table_data(engine, schema, table, output_file)
             updated = True  # Les données ont été mises à jour
 
         engine.dispose()
-        logging.info("Toutes les tables spécifiées ont été extraites avec succès.")
+        extraction_logger.info("Toutes les tables spécifiées ont été extraites avec succès.")
     except Exception as e:
-        logging.error(f"Erreur lors de l'extraction SQL : {e}")
+        extraction_logger.error(f"Erreur lors de l'extraction SQL : {e}")
         print(f"Erreur lors de l'extraction SQL : {e}")
 
     return updated

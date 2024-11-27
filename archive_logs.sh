@@ -4,7 +4,7 @@
 LOG_FILE="logs/extraction.log"
 ARCHIVE_DIR="archive_logs"
 SCHEDULE_LOG="logs/schedule.log"
-MAX_LOG_SIZE=$((5 * 1024 * 1024))  # Taille maximale du fichier log avant archivage (5 MB)
+MAX_LOG_SIZE=$((5 * 1024 * 1024))  # 5 MB
 
 # Création du dossier d'archive s'il n'existe pas
 if [ ! -d "$ARCHIVE_DIR" ]; then

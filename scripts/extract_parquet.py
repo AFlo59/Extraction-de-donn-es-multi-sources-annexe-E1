@@ -2,17 +2,17 @@
 import os
 import logging
 import fsspec
-from scripts.utils import get_env_variable
+from scripts.utils import setup_logger, get_env_variable
 from scripts.generate_sas_token import generate_sas_token
+
+# Initialiser le logger pour l'extraction Parquet
+extraction_logger = setup_logger('extraction_parquet', 'logs/extraction.log')
 
 def extract_parquet():
     """Extrait les fichiers Parquet du data lake et sauvegarde les images et métadonnées."""
     updated = False  # Indicateur de mise à jour
 
     try:
-        # Initialiser le logger
-        logger = logging.getLogger(__name__)
-
         # Variables d'environnement
         account_name = get_env_variable("DATALAKE")
         container_name = get_env_variable("CONTAINER")
@@ -33,8 +33,8 @@ def extract_parquet():
         parquet_files = fs.glob(f"{container_name}/{folder_name}/*.parquet")
 
         if not parquet_files:
-            logger.error(f"Aucun fichier Parquet trouvé dans {folder_name}/")
-            return
+            extraction_logger.error(f"Aucun fichier Parquet trouvé dans {folder_name}/")
+            return updated
 
         # Dossier de sortie
         output_dir = os.path.join("raw_data", "parquet_data")
@@ -46,25 +46,27 @@ def extract_parquet():
             local_parquet_path = os.path.join(output_dir, file_name)
 
             if os.path.exists(local_parquet_path):
-                logger.info(f"Le fichier {file_name} existe déjà. Vérification des mises à jour...")
+                extraction_logger.info(f"Le fichier {file_name} existe déjà. Vérification des mises à jour...")
                 remote_size = fs.size(parquet_path)
                 local_size = os.path.getsize(local_parquet_path)
 
                 if remote_size == local_size:
-                    logging.info(f"Aucune mise à jour pour {file_name}.")
+                    extraction_logger.info(f"Aucune mise à jour pour {file_name}.")
                     continue
                 else:
-                    logging.info(f"Mise à jour détectée pour {file_name}. Téléchargement du nouveau fichier.")
+                    extraction_logger.info(f"Mise à jour détectée pour {file_name}. Téléchargement du nouveau fichier.")
                     updated = True
             else:
+                extraction_logger.info(f"Fichier {file_name} non trouvé localement. Téléchargement en cours...")
                 updated = True
 
+            # Télécharger le fichier Parquet
             with fs.open(parquet_path, 'rb') as remote_file:
                 with open(local_parquet_path, 'wb') as local_file:
                     local_file.write(remote_file.read())
-            logger.info(f"Téléchargé {file_name} vers {local_parquet_path}")
+            extraction_logger.info(f"Téléchargé {file_name} vers {local_parquet_path}")
 
     except Exception as e:
-        logging.error(f"Erreur lors de l'extraction Parquet : {e}")
+        extraction_logger.error(f"Erreur lors de l'extraction Parquet : {e}")
 
     return updated

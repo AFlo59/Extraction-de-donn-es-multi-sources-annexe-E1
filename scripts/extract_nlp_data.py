@@ -2,16 +2,17 @@
 import os
 import logging
 import fsspec
-from scripts.utils import get_env_variable
+from scripts.utils import setup_logger, get_env_variable
 from scripts.generate_sas_token import generate_sas_token
 
+# Initialiser le logger pour l'extraction NLP
+extraction_logger = setup_logger('extraction_nlp', 'logs/extraction.log')
+
 def extract_nlp_data():
-    """Extrait les fichiers .csv et .xlsx des sous-dossiers du data lake tout en préservant l'architecture."""
+    """Extrait les fichiers .csv des sous-dossiers du data lake tout en préservant l'architecture."""
     updated = False  # Indicateur de mise à jour
 
     try:
-        logger = logging.getLogger(__name__)
-
         # Variables d'environnement
         account_name = get_env_variable("DATALAKE")
         container_name = get_env_variable("CONTAINER")
@@ -28,23 +29,17 @@ def extract_nlp_data():
         )
 
         # Lister tous les fichiers dans le dossier NLP et ses sous-dossiers
-        nlp_files = fs.glob(f"{container_name}/{folder_name}/**")
+        nlp_files = fs.glob(f"{container_name}/{folder_name}/**/*.csv")
+
+        if not nlp_files:
+            extraction_logger.warning(f"Aucun fichier CSV trouvé dans {folder_name}/")
+            return updated
 
         # Dossier de sortie
         output_dir = os.path.join("raw_data", "nlp_data")
         os.makedirs(output_dir, exist_ok=True)
 
         for nlp_file in nlp_files:
-            # Vérifier si c'est un dossier
-            if fs.isdir(nlp_file):
-                logger.info(f"Ignoré : {nlp_file} est un dossier.")
-                continue
-
-            # Filtrer les fichiers pour ne garder que les .csv et .xlsx
-            if not (nlp_file.endswith('.csv')):
-                logger.info(f"Fichier ignoré (extension non prise en charge) : {nlp_file}")
-                continue
-
             # Obtenir le chemin relatif pour conserver la structure
             relative_path = os.path.relpath(nlp_file, f"{container_name}/{folder_name}")
             local_file_path = os.path.join(output_dir, relative_path)
@@ -54,19 +49,20 @@ def extract_nlp_data():
             os.makedirs(local_folder_path, exist_ok=True)
 
             if os.path.exists(local_file_path):
-                logger.info(f"Le fichier {local_file_path} existe déjà. Vérification des mises à jour...")
+                extraction_logger.info(f"Le fichier {local_file_path} existe déjà. Vérification des mises à jour...")
 
                 # Comparer les tailles de fichier pour détecter les changements
                 remote_size = fs.size(nlp_file)
                 local_size = os.path.getsize(local_file_path)
 
                 if remote_size == local_size:
-                    logging.info(f"Aucune mise à jour pour {local_file_path}.")
+                    extraction_logger.info(f"Aucune mise à jour pour {local_file_path}.")
                     continue
                 else:
-                    logging.info(f"Mise à jour détectée pour {local_file_path}. Téléchargement du nouveau fichier.")
+                    extraction_logger.info(f"Mise à jour détectée pour {local_file_path}. Téléchargement du nouveau fichier.")
                     updated = True
             else:
+                extraction_logger.info(f"Fichier {local_file_path} non trouvé localement. Téléchargement en cours...")
                 updated = True
 
             # Télécharger le fichier
@@ -74,10 +70,11 @@ def extract_nlp_data():
                 with open(local_file_path, 'wb') as local_file:
                     local_file.write(remote_file.read())
 
-            logger.info(f"Téléchargé {local_file_path}")
+            extraction_logger.info(f"Téléchargé {local_file_path}")
+            updated = True
 
     except Exception as e:
-        logging.error(f"Erreur lors de l'extraction des données NLP : {e}")
+        extraction_logger.error(f"Erreur lors de l'extraction des données NLP : {e}")
 
     return updated
 
