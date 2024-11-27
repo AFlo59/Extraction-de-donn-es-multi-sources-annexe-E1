@@ -67,7 +67,7 @@ def extract_zip():
             extraction_logger.info(f"Téléchargé le fichier ZIP vers {local_zip_path}")
 
         if updated:
-            # Extraire le fichier ZIP
+            # Extraire le fichier ZIP non tu fait appel a dupli_and_transforme_zip_data
             with zipfile.ZipFile(local_zip_path, 'r') as zip_ref:
                 zip_ref.extractall(output_dir)
                 extraction_logger.info(f"Fichier ZIP {zip_file_name} extrait dans {output_dir}")

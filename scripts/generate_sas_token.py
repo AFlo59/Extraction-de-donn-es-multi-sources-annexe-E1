@@ -2,7 +2,7 @@
 import logging
 from azure.storage.blob import generate_container_sas, ContainerSasPermissions
 from datetime import datetime, timedelta
-from scripts.utils import get_env_variable
+from .utils import get_env_variable  # Import relatif
 
 def generate_sas_token(container_name):
     """Génère un SAS token pour le conteneur spécifié."""

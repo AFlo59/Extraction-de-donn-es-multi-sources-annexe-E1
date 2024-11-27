@@ -6,7 +6,7 @@ from scripts.utils import get_env_variable
 
 def duplicate_sql_data(folders):
     """
-    Duplique les données SQL de raw_data/sql_data vers csv_data/sql_data.
+    Duplique les données SQL de raw_data/sql_data vers csv_data/transformed_sql.
 
     :param folders: Liste des noms de schémas à dupliquer
     :return: Booléen indiquant si des fichiers ont été dupliqués
@@ -15,13 +15,17 @@ def duplicate_sql_data(folders):
     pipeline_logger = logging.getLogger('pipeline')
 
     raw_dir = os.path.join("raw_data", "sql_data")
-    csv_dir = os.path.join("csv_data", "sql_data")
+    csv_dir = os.path.join("csv_data", "transformed_sql")
     os.makedirs(csv_dir, exist_ok=True)
 
     for folder in folders:
         source_folder = os.path.join(raw_dir, folder)
         target_folder = os.path.join(csv_dir, folder)
         os.makedirs(target_folder, exist_ok=True)
+
+        if not os.path.exists(source_folder):
+            pipeline_logger.warning(f"Dossier source manquant : {source_folder}")
+            continue
 
         for file_name in os.listdir(source_folder):
             if file_name.endswith(".csv"):

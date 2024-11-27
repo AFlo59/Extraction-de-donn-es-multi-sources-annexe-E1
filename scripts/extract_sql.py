@@ -4,7 +4,8 @@ import os
 import pandas as pd
 from sqlalchemy import create_engine, text
 from urllib.parse import quote_plus
-from scripts.utils import setup_logger, get_env_variable
+from .utils import setup_logger, get_env_variable  # Import relatif
+
 
 # Initialiser le logger pour l'extraction SQL
 extraction_logger = setup_logger('extraction_sql', 'logs/extraction.log')

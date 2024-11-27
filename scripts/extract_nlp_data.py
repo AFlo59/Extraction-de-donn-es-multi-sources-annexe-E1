@@ -9,7 +9,7 @@ from scripts.generate_sas_token import generate_sas_token
 extraction_logger = setup_logger('extraction_nlp', 'logs/extraction.log')
 
 def extract_nlp_data():
-    """Extrait les fichiers .csv des sous-dossiers du data lake tout en préservant l'architecture."""
+    """Extrait tous les fichiers des sous-dossiers du data lake tout en préservant l'architecture."""
     updated = False  # Indicateur de mise à jour
 
     try:
@@ -29,10 +29,10 @@ def extract_nlp_data():
         )
 
         # Lister tous les fichiers dans le dossier NLP et ses sous-dossiers
-        nlp_files = fs.glob(f"{container_name}/{folder_name}/**/*.csv")
+        nlp_files = fs.glob(f"{container_name}/{folder_name}/**/*")
 
         if not nlp_files:
-            extraction_logger.warning(f"Aucun fichier CSV trouvé dans {folder_name}/")
+            extraction_logger.warning(f"Aucun fichier trouvé dans {folder_name}/")
             return updated
 
         # Dossier de sortie
@@ -40,6 +40,11 @@ def extract_nlp_data():
         os.makedirs(output_dir, exist_ok=True)
 
         for nlp_file in nlp_files:
+            # Vérifier si c'est un fichier
+            if not fs.isfile(nlp_file):
+                extraction_logger.info(f"Skipping directory {nlp_file}")
+                continue
+
             # Obtenir le chemin relatif pour conserver la structure
             relative_path = os.path.relpath(nlp_file, f"{container_name}/{folder_name}")
             local_file_path = os.path.join(output_dir, relative_path)
@@ -78,3 +83,5 @@ def extract_nlp_data():
 
     return updated
 
+if __name__ == "__main__":
+    extract_nlp_data()

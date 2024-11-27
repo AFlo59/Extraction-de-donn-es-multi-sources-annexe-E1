@@ -33,29 +33,35 @@ project/
 │   ├── extract_zip.py        # Extraction des fichiers ZIP
 │   ├── extract_nlp_data.py   # Extraction des données NLP
 │   ├── setup_folders.py      # Création des dossiers nécessaires
-|   ├── dupli_and_transform_zip_data.py
-|   ├── dupli_nlp_data.py
-|   ├── dupli_sql_data.py
-|   ├── transform_parquet_data.py
+│   ├── dupli_and_transform_zip_data.py
+│   ├── dupli_nlp_data.py
+│   ├── dupli_sql_data.py
+│   ├── transform_parquet_data.py
 │   └── utils.py              # Fonctions utilitaires communes
 ├── raw_data/                 # Dossier pour les données brutes
 │   ├── sql_data/
 │   │   └── schema/
 │   │       └── table.csv
 │   ├── parquet_data/
-│   │   ├── fichier.parquet
-│   │   └── images/
-│   │       └── image.png
+│   │   └── fichier.parquet    # télécharge juste les fichiers .parquet
 │   ├── zip_data/
-│   │   └── fichier.csv
+│   │   └── fichier.zip
 │   └── nlp_data/
 │       └── sous_dossier/
-│           └── fichier.csv
+│           └── fichier.csv ou xlsx ou sous_dossier/fichier.csv ou xlsx
 ├── csv_data/                 # Dossier pour les données transformées
 │   ├── transformed_sql/
+│   │   └── schema/
+│   │       └── table.csv      # sélectionner
 │   ├── transformed_parquet/
-│   ├── transformed_zip/
-│   └── transformed_nlp/
+│   │   ├── images/            # chaque image en png extraite des parquet
+│   │   └── metadata_fichier.csv # convertir les .parquet en plusieurs parties en un csv 
+│   │                            # metadata correspondant à l'image extraite en png 
+│   ├── transformed_nlp/
+│   │   └── sous_dossier/
+│   │       └── fichier.csv ou sous_dossier/fichier.csv
+│   └── transformed_zip/       # tous les fichiers du zip extrait, si il y a un fichier tgz dedans
+│                               # extrait tous les csv qu'il contient
 └── logs/                     # Dossier pour les fichiers de logs
     ├── extraction.log
     ├── pipeline.log

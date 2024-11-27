@@ -7,12 +7,13 @@ def create_directories():
         "raw_data",
         "raw_data/sql_data",
         "raw_data/parquet_data",
-        "raw_data/parquet_data/images",
+        "raw_data/parquet_data/",
         "raw_data/zip_data",
         "raw_data/nlp_data",
         "csv_data",
         "csv_data/transformed_sql",
         "csv_data/transformed_parquet",
+        "csv_data/transformed_parquet/images",
         "csv_data/transformed_zip",
         "csv_data/transformed_nlp"
     ]

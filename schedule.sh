@@ -62,9 +62,9 @@ fi
 echo "$(date '+%Y-%m-%d %H:%M:%S') - Fin de l'exécution de schedule.sh."
 
 # Archivage des logs
-echo "$(date '+%Y-%m-%d %H:%M:%S') - Lancement de l'archivage des logs." >> "$LOG_FILE"
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Lancement de l'archivage des logs."
 chmod +x ./archive_logs.sh
 ./archive_logs.sh
-echo "$(date '+%Y-%m-%d %H:%M:%S') - Archivage des logs terminé." >> "$LOG_FILE"
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Archivage des logs terminé."
 
 deactivate

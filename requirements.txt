@@ -12,6 +12,8 @@ azure-identity
 fsspec
 adlfs
 
+Pillow
+
 # Formats de données
 pyarrow
 

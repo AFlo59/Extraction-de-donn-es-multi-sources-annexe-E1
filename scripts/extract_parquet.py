@@ -9,7 +9,7 @@ from scripts.generate_sas_token import generate_sas_token
 extraction_logger = setup_logger('extraction_parquet', 'logs/extraction.log')
 
 def extract_parquet():
-    """Extrait les fichiers Parquet du data lake et sauvegarde les images et métadonnées."""
+    """Extrait les fichiers Parquet du data lake et les sauvegarde dans raw_data/parquet_data."""
     updated = False  # Indicateur de mise à jour
 
     try:
@@ -17,7 +17,6 @@ def extract_parquet():
         account_name = get_env_variable("DATALAKE")
         container_name = get_env_variable("CONTAINER")
         folder_name = get_env_variable("PARQUET_FOLDER")  # 'product_eval'
-        storage_account_key = get_env_variable("STORAGE_ACCOUNT_KEY")
 
         # Générer le SAS token
         sas_token = generate_sas_token(container_name)
