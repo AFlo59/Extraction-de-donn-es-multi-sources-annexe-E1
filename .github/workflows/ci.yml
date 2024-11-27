@@ -1,0 +1,99 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ test ]
+  pull_request:
+    branches: [ test ]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    steps:
+    - name: Checkout du code
+      uses: actions/checkout@v3
+
+    - name: Configuration de Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'  # Assurez-vous que cette version correspond à votre environnement
+
+    - name: Installer Bats (pour Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        git clone https://github.com/bats-core/bats-core.git
+        cd bats-core
+        sudo ./install.sh /usr/local
+        cd ..
+    
+    - name: Installer Bats (pour Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install bats
+      shell: pwsh
+
+    - name: Installation des dépendances système (Linux uniquement)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt --fix-broken install -y
+      shell: bash
+
+    - name: Création de l'environnement virtuel
+      run: |
+        python -m venv venv
+      shell: bash
+
+    - name: Activer l'environnement virtuel et installer les dépendances
+      run: |
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+      shell: bash
+      env:
+        DATALAKE: ${{ secrets.DATALAKE }}
+        STORAGE_ACCOUNT_KEY: ${{ secrets.STORAGE_ACCOUNT_KEY }}
+        CONTAINER: ${{ secrets.CONTAINER }}
+        ZIP_FOLDER: ${{ secrets.ZIP_FOLDER }}
+        ZIP_FILE_NAME: ${{ secrets.ZIP_FILE_NAME }}
+        PARQUET_FOLDER: ${{ secrets.PARQUET_FOLDER }}
+        NLP_FOLDER: ${{ secrets.NLP_FOLDER }}
+        SQL_SERVER: ${{ secrets.SQL_SERVER }}
+        SQL_DB: ${{ secrets.SQL_DB }}
+        SQL_ID: ${{ secrets.SQL_ID }}
+        SQL_PW: ${{ secrets.SQL_PW }}
+        DRIVER: ${{ secrets.DRIVER }}
+        ENCRYPT: ${{ secrets.ENCRYPT }}
+        TrustServerCertificate: ${{ secrets.TRUST_SERVER_CERTIFICATE }}
+
+    - name: Exécution des tests Bash avec Bats (Linux uniquement)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        bats tests/test_install.bats
+        bats tests/test_schedule.bats
+      shell: bash
+
+    - name: Exécution des tests Bash avec Bats (Windows uniquement)
+      if: matrix.os == 'windows-latest'
+      run: |
+        bats tests/test_install.bats
+        bats tests/test_schedule.bats
+      shell: pwsh
+
+    - name: Exécution des tests Python avec pytest
+      run: |
+        source venv/bin/activate
+        pytest
+      shell: bash
+
+    - name: Publier les Logs (Optionnel)
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: logs
+        path: logs/

@@ -20,7 +20,8 @@ project/
 ├── script.py                 # Script principal orchestrant les extractions
 ├── install.sh                # Script pour l'installation automatique des dépendances
 ├── schedule.sh               # Script pour planifier et lancer les extractions
-├── .gitlab-ci.yml            # Configuration CI/CD pour valider les scripts sur la branche develop
+├── .github/workflows            # Configuration CI/CD pour valider 
+|   └── ci.yml                        # les scripts sur la branche  develop et test
 ├── .env                      # Variables d'environnement (confidentielles)
 ├── .gitignore                # Ignore venv et fichiers sensibles
 ├── README.md                 # Documentation du projet
