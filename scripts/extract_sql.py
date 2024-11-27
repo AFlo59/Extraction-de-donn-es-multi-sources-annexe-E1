@@ -2,7 +2,7 @@
 import logging
 import os
 import pandas as pd
-from sqlalchemy import create_engine,  text
+from sqlalchemy import create_engine, text
 from urllib.parse import quote_plus
 from scripts.utils import get_env_variable
 
@@ -124,6 +124,8 @@ def extract_table_data(engine, schema, table, output_file):
 
 def extract_sql():
     """Fonction principale pour l'extraction des tables spécifiées."""
+    updated = False  # Indicateur de mise à jour
+
     try:
         # Vérifier que toutes les variables d'environnement nécessaires sont présentes
         required_vars = ["SQL_SERVER", "SQL_DB", "SQL_ID", "SQL_PW", "DRIVER", "ENCRYPT", "TrustServerCertificate"]
@@ -139,7 +141,6 @@ def extract_sql():
         # Dossier de base pour les fichiers CSV
         base_output_dir = "raw_data/sql_data"
 
-        # Parcourir chaque table et extraire les données
         for index, row in df_tables.iterrows():
             schema = row['TABLE_SCHEMA']
             table = row['TABLE_NAME']
@@ -153,11 +154,21 @@ def extract_sql():
             # Définir le chemin du fichier de sortie
             output_file = os.path.join(schema_dir, f"{table}.csv")
 
+            # Vérifier si le fichier existe déjà
+            if os.path.exists(output_file):
+                logging.info(f"Le fichier {output_file} existe déjà. Vérification des mises à jour...")
+
+                # Ici, vous pouvez implémenter une logique pour comparer les données, par exemple en comparant les horodatages ou les hash des fichiers.
+                # Pour simplifier, nous allons supposer que nous extrayons toujours les données SQL.
+
             # Extraire les données de la table
             extract_table_data(engine, schema, table, output_file)
+            updated = True  # Les données ont été mises à jour
 
         engine.dispose()
         logging.info("Toutes les tables spécifiées ont été extraites avec succès.")
     except Exception as e:
         logging.error(f"Erreur lors de l'extraction SQL : {e}")
         print(f"Erreur lors de l'extraction SQL : {e}")
+
+    return updated

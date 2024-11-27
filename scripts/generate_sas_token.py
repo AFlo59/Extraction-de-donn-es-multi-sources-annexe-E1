@@ -1,3 +1,4 @@
+# scripts/generate_sas_token.py
 import logging
 from azure.storage.blob import generate_container_sas, ContainerSasPermissions
 from datetime import datetime, timedelta

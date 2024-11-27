@@ -1,3 +1,4 @@
+# scripts/extract_nlp_data.py
 import os
 import logging
 import fsspec
@@ -6,6 +7,8 @@ from scripts.generate_sas_token import generate_sas_token
 
 def extract_nlp_data():
     """Extrait les fichiers .csv et .xlsx des sous-dossiers du data lake tout en préservant l'architecture."""
+    updated = False  # Indicateur de mise à jour
+
     try:
         logger = logging.getLogger(__name__)
 
@@ -38,7 +41,7 @@ def extract_nlp_data():
                 continue
 
             # Filtrer les fichiers pour ne garder que les .csv et .xlsx
-            if not (nlp_file.endswith('.csv') or nlp_file.endswith('.xlsx')):
+            if not (nlp_file.endswith('.csv')):
                 logger.info(f"Fichier ignoré (extension non prise en charge) : {nlp_file}")
                 continue
 
@@ -50,7 +53,6 @@ def extract_nlp_data():
             local_folder_path = os.path.dirname(local_file_path)
             os.makedirs(local_folder_path, exist_ok=True)
 
-            # Vérifier si le fichier existe déjà
             if os.path.exists(local_file_path):
                 logger.info(f"Le fichier {local_file_path} existe déjà. Vérification des mises à jour...")
 
@@ -59,10 +61,13 @@ def extract_nlp_data():
                 local_size = os.path.getsize(local_file_path)
 
                 if remote_size == local_size:
-                    logger.info(f"Aucune mise à jour pour {local_file_path}.")
+                    logging.info(f"Aucune mise à jour pour {local_file_path}.")
                     continue
                 else:
-                    logger.info(f"Mise à jour détectée pour {local_file_path}. Téléchargement du nouveau fichier.")
+                    logging.info(f"Mise à jour détectée pour {local_file_path}. Téléchargement du nouveau fichier.")
+                    updated = True
+            else:
+                updated = True
 
             # Télécharger le fichier
             with fs.open(nlp_file, 'rb') as remote_file:
@@ -72,4 +77,7 @@ def extract_nlp_data():
             logger.info(f"Téléchargé {local_file_path}")
 
     except Exception as e:
-        logger.error(f"Erreur lors de l'extraction des données NLP : {e}")
+        logging.error(f"Erreur lors de l'extraction des données NLP : {e}")
+
+    return updated
+

@@ -33,6 +33,10 @@ project/
 │   ├── extract_zip.py        # Extraction des fichiers ZIP
 │   ├── extract_nlp_data.py   # Extraction des données NLP
 │   ├── setup_folders.py      # Création des dossiers nécessaires
+|   ├── dupli_and_transform_zip_data.py
+|   ├── dupli_nlp_data.py
+|   ├── dupli_sql_data.py
+|   ├── transform_parquet_data.py
 │   └── utils.py              # Fonctions utilitaires communes
 ├── raw_data/                 # Dossier pour les données brutes
 │   ├── sql_data/
@@ -53,7 +57,9 @@ project/
 │   ├── transformed_zip/
 │   └── transformed_nlp/
 └── logs/                     # Dossier pour les fichiers de logs
-    └── extraction.log
+    ├── extraction.log
+    ├── pipeline.log
+    └── schedule.log
 
 
 pour lire les log du cron

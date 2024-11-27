@@ -1,3 +1,4 @@
+# scripts/setup_folders.py
 import os
 
 def create_directories():
