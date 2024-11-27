@@ -60,3 +60,10 @@ else
 fi
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') - Fin de l'exécution de schedule.sh."
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Lancement de l'archivage des logs." >> logs/schedule.log
+    chmod +x ./archive_logs.sh
+    ./archive_logs.sh
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Archivage des logs terminé." >> logs/schedule.log
+
+deactivate
